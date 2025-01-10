@@ -148,3 +148,45 @@ class NeuralNetwork:
             self.weights[i] -= learning_rate * weight_gradients[i]
             self.biases[i] -= learning_rate * bias_gradients[i]
 
+    def update_parameters_rprop(self,
+                                weight_gradients: list[np.ndarray],
+                                bias_gradients: list[np.ndarray],
+                                prev_weight_gradients: list[np.ndarray],
+                                prev_bias_gradients: list[np.ndarray],
+                                weight_delta: list[np.ndarray],
+                                bias_delta: list[np.ndarray],
+                                eta_plus: float = 1.1,
+                                eta_minus: float = 0.5,
+                                delta_min: float = 1e-06,
+                                delta_max: float = 50):
+        """
+        Aggiorna i parametri della rete neurale utilizzando l'algoritmo RProp.
+
+        Parametri:
+        weight_gradients (list[np.ndarray]): Gradienti correnti dei pesi.
+        bias_gradients (list[np.ndarray]): Gradienti correnti dei bias.
+        prev_weight_gradients (list[np.ndarray]): Gradienti dei pesi dalla precedente iterazione.
+        prev_bias_gradients (list[np.ndarray]): Gradienti dei bias dalla precedente iterazione.
+        weight_delta (list[np.ndarray]): Passi adattivi correnti per i pesi.
+        bias_delta (list[np.ndarray]): Passi adattivi correnti per i bias.
+        eta_plus (float): Fattore di incremento per il passo adattivo. Default 1.1.
+        eta_minus (float): Fattore di decremento per il passo adattivo. Default 0.5.
+        delta_min (float): Valore minimo consentito per il passo adattivo. Default 1e-06.
+        delta_max (float): Valore massimo consentito per il passo adattivo. Default 50.
+
+
+        """
+        for i in range(len(self.layers)):
+
+            if prev_weight_gradients:  # controlla la lista dei gradienti non sia vuota (ovvero c'è stata almeno un'altra epoca)
+                sign_change_weights = weight_gradients[i] * prev_weight_gradients[i]
+                weight_delta[i][sign_change_weights > 0] = np.minimum(eta_plus * weight_delta[i], delta_max)
+                weight_delta[i][sign_change_weights < 0] = np.maximum(eta_minus * weight_delta[i], delta_min)
+
+                sign_change_bias = bias_gradients[i] * prev_bias_gradients[i]
+                bias_delta[i][sign_change_bias > 0] = np.minimum(eta_plus * bias_delta[i], delta_max)
+                bias_delta[i][sign_change_bias < 0] = np.maximum(eta_minus * bias_delta[i], delta_min)
+
+            self.weights[i] -= np.sign(weight_gradients[i]) * weight_delta[i]
+            self.biases[i] -= np.sign(bias_gradients[i]) * bias_delta[i]
+
