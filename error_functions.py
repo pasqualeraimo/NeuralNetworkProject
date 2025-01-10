@@ -16,7 +16,7 @@ def sum_of_squares(predictions: np.ndarray, targets: np.ndarray, derivative: boo
     """
     if derivative:
         return predictions - targets
-    return np.array([0.5 * np.sum((predictions - targets) ** 2)])
+    return 0.5 * np.sum((predictions - targets) ** 2)
 
 def cross_entropy(predictions: np.ndarray, targets: np.ndarray, derivative: bool = False) -> np.ndarray:
     """
@@ -36,7 +36,7 @@ def cross_entropy(predictions: np.ndarray, targets: np.ndarray, derivative: bool
     predictions = np.clip(predictions, epsilon, 1 - epsilon)
     if derivative:
         return -(targets / predictions) + ((1 - targets) / (1 - predictions))
-    return np.array([-np.sum(targets * np.log(predictions) + (1 - targets) * np.log(1 - predictions))])
+    return -np.sum(targets * np.log(predictions) + (1 - targets) * np.log(1 - predictions))
 
 def cross_entropy_softmax(predictions: np.ndarray, targets: np.ndarray, derivative: bool = False) -> np.ndarray:
     """
@@ -57,7 +57,7 @@ def cross_entropy_softmax(predictions: np.ndarray, targets: np.ndarray, derivati
     softmax_outputs = np.clip(softmax_outputs, epsilon, 1)
     if derivative:
         return softmax_outputs - targets
-    return np.array([-np.sum(targets * np.log(softmax_outputs))])
+    return -np.sum(targets * np.log(softmax_outputs))
 
 def softmax(x: np.ndarray) -> np.ndarray:
     """

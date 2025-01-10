@@ -3,6 +3,7 @@ from typing import Literal
 import numpy as np
 from network_types import ActivationFunction, ErrorFunction
 
+
 class NeuralNetwork:
     def __init__(self,
                  layers: list[int],
@@ -28,7 +29,8 @@ class NeuralNetwork:
 
     def _init_parameters_normal_distribution(self,
                                              mean: float = 0.0,
-                                             standard_deviation: float = 0.1) -> tuple[list[np.ndarray], list[np.ndarray]]:
+                                             standard_deviation: float = 0.1) -> tuple[
+        list[np.ndarray], list[np.ndarray]]:
         """
         Inizializza i pesi e i bias con una distribuzione normale.
 
@@ -45,7 +47,8 @@ class NeuralNetwork:
         biases: list[np.ndarray] = []
         for i in range(len(self.layers) - 1):
             # Inizializza i pesi con una matrice di dimensione (nodi_strato_successivo, nodi_strato_corrente)
-            weights.append(np.random.normal(loc=mean, scale=standard_deviation, size=(self.layers[i + 1], self.layers[i])))
+            weights.append(
+                np.random.normal(loc=mean, scale=standard_deviation, size=(self.layers[i + 1], self.layers[i])))
             # Inizializza i bias con una matrice colonna di dimensione (nodi_strato_successivo, 1)
             biases.append(np.random.normal(loc=mean, scale=standard_deviation, size=(self.layers[i + 1], 1)))
         return weights, biases
@@ -175,16 +178,29 @@ class NeuralNetwork:
         delta_max (float): Valore massimo consentito per il passo adattivo. Default 50.
 
         """
-        for i in range(len(self.layers)):
+        for i in range(len(self.layers)-1):
 
             if prev_weight_gradients:  # controlla la lista dei gradienti non sia vuota (ovvero c'è stata almeno un'altra epoca)
                 sign_change_weights = weight_gradients[i] * prev_weight_gradients[i]
-                weight_delta[i][sign_change_weights > 0] = np.minimum(eta_plus * weight_delta[i], delta_max)
-                weight_delta[i][sign_change_weights < 0] = np.maximum(eta_minus * weight_delta[i], delta_min)
+
+                weight_delta[i] = np.where(
+                    sign_change_weights > 0,
+                    np.minimum(weight_delta[i] * eta_plus, delta_max),  # Incrementa delta se segno è lo stesso
+                    np.where(
+                        sign_change_weights < 0,
+                        np.maximum(weight_delta[i] * eta_minus, delta_min),  # Riduci delta se segno cambia
+                        weight_delta[i]  # Mantieni delta invariato se non c'è cambiamento
+                    )
+                )
 
                 sign_change_bias = bias_gradients[i] * prev_bias_gradients[i]
-                bias_delta[i][sign_change_bias > 0] = np.minimum(eta_plus * bias_delta[i], delta_max)
-                bias_delta[i][sign_change_bias < 0] = np.maximum(eta_minus * bias_delta[i], delta_min)
+                bias_delta[i] = np.where(
+                    sign_change_bias > 0,
+                    np.minimum(bias_delta[i] * eta_plus, delta_max),
+                    np.where(
+                        sign_change_bias < 0,
+                        np.maximum(bias_delta[i] * eta_minus, delta_min),
+                        bias_delta[i]))
 
             self.weights[i] -= np.sign(weight_gradients[i]) * weight_delta[i]
             self.biases[i] -= np.sign(bias_gradients[i]) * bias_delta[i]
