@@ -9,7 +9,8 @@ class NeuralNetwork:
                  layers: list[int],
                  activation_functions: list[ActivationFunction],
                  mean: float = 0.0,
-                 standard_deviation: float = 0.1):
+                 standard_deviation: float = 0.1,
+                 init_parameters_seed: int = None) -> None:
         """
         Inizializza la struttura della rete neurale.
 
@@ -18,6 +19,7 @@ class NeuralNetwork:
         activation_functions (list[ActivationFunction]): Funzioni di attivazione per ogni strato.
         mean (float): Media della distribuzione normale utilizzata per inizializzare i parametri. Default 0.0.
         standard_deviation (float): Deviazione standard della distribuzione normale per l'inizializzazione. Default 0.1.
+        init_parameters_seed (int): Seed per il generatore di numeri casuali per l'inizializzazione dei pesi e dei bias. Default None.
 
         Note:
         I pesi e i bias della rete sono inizializzati usando una distribuzione normale con i parametri configurabili
@@ -25,24 +27,28 @@ class NeuralNetwork:
         """
         self.layers = layers
         self.activation_functions = activation_functions
-        self.weights, self.biases = self._init_parameters_normal_distribution(mean, standard_deviation)
+        self.weights, self.biases = self._init_parameters_normal_distribution(mean, standard_deviation, init_parameters_seed)
 
     def _init_parameters_normal_distribution(self,
                                              mean: float = 0.0,
-                                             standard_deviation: float = 0.1) -> tuple[
-        list[np.ndarray], list[np.ndarray]]:
+                                             standard_deviation: float = 0.1,
+                                             seed: int = 42) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """
         Inizializza i pesi e i bias con una distribuzione normale.
 
         Parametri:
         mean (float): Media della distribuzione normale. Default 0.0.
         standard_deviation (float): Deviazione standard della distribuzione normale. Default 0.1.
+        seed (int): Seed per il generatore di numeri casuali. Default None.
 
         Restituisce:
         tuple[list[np.ndarray], list[np.ndarray]]: Liste dei pesi e dei bias inizializzati.
             - weights: Liste di matrici dei pesi, ogni matrice ha dimensione (nodi_strato_successivo, nodi_strato_corrente).
             - biases: Liste di vettori dei bias, ogni vettore ha dimensione (nodi_strato_successivo, 1).
         """
+        if seed is not None:
+            np.random.seed(seed)  # Imposta il seed per la generazione casuale
+
         weights: list[np.ndarray] = []
         biases: list[np.ndarray] = []
         for i in range(len(self.layers) - 1):
@@ -193,6 +199,8 @@ class NeuralNetwork:
                     )
                 )
 
+                weight_gradients[i] = np.where(sign_change_weights < 0, 0, weight_gradients[i])
+
                 sign_change_bias = bias_gradients[i] * prev_bias_gradients[i]
                 bias_delta[i] = np.where(
                     sign_change_bias > 0,
@@ -201,6 +209,8 @@ class NeuralNetwork:
                         sign_change_bias < 0,
                         np.maximum(bias_delta[i] * eta_minus, delta_min),
                         bias_delta[i]))
+
+                bias_gradients[i] = np.where(sign_change_bias < 0, 0, bias_gradients[i])
 
             self.weights[i] -= np.sign(weight_gradients[i]) * weight_delta[i]
             self.biases[i] -= np.sign(bias_gradients[i]) * bias_delta[i]
@@ -307,3 +317,28 @@ class NeuralNetwork:
         self.biases = best_biases
 
         return error_training_history, error_validation_history
+
+    def compute_accuracy(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
+        """
+        Valuta l'accuracy della rete neurale su un test set.
+
+        Parametri:
+        x_test (np.ndarray): Input del test set, dimensione (nodi_input, numero_campioni_test).
+        y_test (np.ndarray): Target del test set, dimensione (nodi_output, numero_campioni_test).
+
+        Restituisce:
+        float: Accuracy calcolata sul test set.
+        """
+
+        activations_test, _ = self.forward_propagation(x_test)
+
+        # Predizioni: scegli l'indice del massimo valore (classe con maggiore probabilità)
+        predictions = np.argmax(activations_test[-1], axis=0)
+
+        # Target: scegli l'indice del massimo valore nel target (one-hot encoding)
+        true_labels = np.argmax(y_test, axis=0)
+
+        # Calcola l'accuracy
+        accuracy = np.mean(predictions == true_labels)
+
+        return accuracy
