@@ -80,3 +80,52 @@ class NeuralNetwork:
             a = self.activation_functions[i](z, False)
             activations.append(a)
         return activations, pre_activations
+
+    def backward_propagation(self,
+                             targets: np.ndarray,
+                             error_function: ErrorFunction,
+                             activations: list[np.ndarray],
+                             pre_activations: list[np.ndarray]) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        """
+        Esegue la back-propagation per calcolare i gradienti dei pesi e dei bias.
+
+        Parametri:
+        activations (list[np.ndarray]): Lista di matrici delle attivazioni per ogni strato.
+        pre_activations (list[np.ndarray]): Lista di matrici delle pre-attivazioni per ogni strato.
+        targets (np.ndarray): Valori target per il calcolo dell'errore, di dimensione (nodi_output, batch_size).
+        error_function (ErrorFunction): Funzione di errore utilizzata per calcolare l'errore.
+
+        Restituisce:
+        tuple[list[np.ndarray], list[np.ndarray]]:
+            - weight_gradients: Gradienti dei pesi per ogni strato, ogni matrice ha dimensione (nodi_strato_successivo, nodi_strato_corrente).
+            - bias_gradients: Gradienti dei bias per ogni strato, ogni vettore ha dimensione (nodi_strato_successivo, 1).
+        """
+
+        delta = []
+        weight_gradients: list[np.ndarray] = []
+        bias_gradients: list[np.ndarray] = []
+
+        # Calcolo dei delta (errore locale) per ogni strato
+        for i in range(len(self.layers) - 1):
+            if i == 0:
+                # Calcolo del delta per l'ultimo strato
+                # delta ha dimensione (nodi_output, batch_size)
+                delta.append(self.activation_functions[-1](pre_activations[-1], True) *
+                             error_function(activations[-1], targets, True))
+            else:
+                # Calcolo del delta per gli strati nascosti
+                # delta ha dimensione (nodi_strato_corrente, batch_size)
+                delta.append(self.activation_functions[-i - 1](pre_activations[-i - 1], True) *
+                             np.dot(self.weights[-i].T, delta[i - 1]))
+
+        # Inversione dei delta per allinearli agli strati
+        delta.reverse()
+
+        # Calcolo dei gradienti dei pesi e dei bias
+        for i in range(len(self.layers) - 1):
+            # Gradiente dei pesi: dimensione (nodi_strato_successivo, nodi_strato_corrente)
+            weight_gradients.append(np.dot(delta[i], activations[i].T))
+            # Gradiente dei bias: dimensione (nodi_strato_successivo, 1)
+            bias_gradients.append(np.sum(delta[i], axis=1, keepdims=True))
+
+        return weight_gradients, bias_gradients
