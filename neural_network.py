@@ -90,8 +90,8 @@ class NeuralNetwork:
         Esegue la back-propagation per calcolare i gradienti dei pesi e dei bias.
 
         Parametri:
-        activations (list[np.ndarray]): Lista di matrici delle attivazioni per ogni strato.
-        pre_activations (list[np.ndarray]): Lista di matrici delle pre-attivazioni per ogni strato.
+        activations (list[np.ndarray]): Lista di matrici delle attivazioni per ogni strato. La lista ha dimensione (numero_layer).
+        pre_activations (list[np.ndarray]): Lista di matrici delle pre-attivazioni per ogni strato. La lista ha dimensione (numero_layer - 1).
         targets (np.ndarray): Valori target per il calcolo dell'errore, di dimensione (nodi_output, batch_size).
         error_function (ErrorFunction): Funzione di errore utilizzata per calcolare l'errore.
 
