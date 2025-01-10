@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy as np
 from network_types import ActivationFunction, ErrorFunction
 
@@ -129,3 +131,20 @@ class NeuralNetwork:
             bias_gradients.append(np.sum(delta[i], axis=1, keepdims=True))
 
         return weight_gradients, bias_gradients
+
+    def update_parameters_stochastic_gradient_descent(self,
+                                                      weight_gradients: list[np.ndarray],
+                                                      bias_gradients: list[np.ndarray],
+                                                      learning_rate: float = 0.001):
+        """
+        Aggiorna i pesi e i bias utilizzando l'updating rule 'stochastic gradient descent'.
+
+        Parametri:
+        weight_gradients (list[np.ndarray]): Gradienti dei pesi, ogni matrice ha dimensione (nodi_strato_successivo, nodi_strato_corrente).
+        bias_gradients (list[np.ndarray]): Gradienti dei bias, ogni vettore ha dimensione (nodi_strato_successivo, 1).
+        learning_rate (float): Tasso di apprendimento per l'aggiornamento dei parametri. Default 0.001.
+        """
+        for i in range(len(self.weights)):
+            self.weights[i] -= learning_rate * weight_gradients[i]
+            self.biases[i] -= learning_rate * bias_gradients[i]
+
