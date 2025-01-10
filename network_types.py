@@ -8,8 +8,8 @@ from typing import Callable
 ActivationFunction = Callable[[np.ndarray, bool], np.ndarray]
 
 # Tipo per la funzione di errore, che accetta:
-# - Un array numpy.ndarray, che rappresenta il valore predetto dalla rete neurale.
-# - Un array numpy.ndarray, che rappresenta il valore atteso.
+# - Un array numpy.ndarray, che rappresenta la predizione dalla rete neurale.
+# - Un array numpy.ndarray, che rappresenta i valori attesi.
 # - Un booleano, che indica se si desidera calcolare la derivata della funzione di errore.
 # Restituisce un array numpy.ndarray che rappresenta l'errore calcolato o la sua derivata.
 ErrorFunction = Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
