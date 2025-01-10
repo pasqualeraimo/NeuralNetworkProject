@@ -24,7 +24,6 @@ def cross_entropy(predictions: np.ndarray, targets: np.ndarray, derivative: bool
 
     Parametri:
     predictions (np.ndarray): Array delle predizioni della rete neurale di dimensione (output_dim, batch_size).
-                              Le predizioni devono essere comprese nell'intervallo (0, 1).
     targets (np.ndarray): Array dei valori target di dimensione (output_dim, batch_size).
     derivative (bool): Se True, calcola la derivata dell'errore rispetto alle predizioni.
 
@@ -44,21 +43,21 @@ def cross_entropy_softmax(predictions: np.ndarray, targets: np.ndarray, derivati
     Calcola la cross-entropy con softmax o la sua derivata rispetto alle predizioni.
 
     Parametri:
-    predictions (np.ndarray): Logit della rete neurale (non normalizzati), dimensione (output_dim, batch_size).
-    targets (np.ndarray): Valori target (one-hot encoded), dimensione (output_dim, batch_size).
+    predictions (np.ndarray): Array delle predizioni della rete neurale di dimensione (output_dim, batch_size).
+    targets (np.ndarray): Array dei valori target di dimensione (output_dim, batch_size).
     derivative (bool): Se True, calcola la derivata dell'errore rispetto alle predizioni.
 
     Restituisce:
     np.ndarray:
         - Se `derivative` è True, restituisce un array di dimensione (output_dim, batch_size) contenente il gradiente combinato di softmax e cross-entropy.
-        - Altrimenti, restituisce un valore scalare che rappresenta l'errore complessivo.
+        - Altrimenti, restituisce un array scalare che rappresenta l'errore complessivo.
     """
     epsilon = 1e-12
     softmax_outputs = softmax(predictions)
     softmax_outputs = np.clip(softmax_outputs, epsilon, 1)
     if derivative:
         return softmax_outputs - targets
-    return -np.sum(targets * np.log(softmax_outputs))
+    return np.array([-np.sum(targets * np.log(softmax_outputs))])
 
 def softmax(x: np.ndarray) -> np.ndarray:
     """
