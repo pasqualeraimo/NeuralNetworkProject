@@ -174,7 +174,6 @@ class NeuralNetwork:
         delta_min (float): Valore minimo consentito per il passo adattivo. Default 1e-06.
         delta_max (float): Valore massimo consentito per il passo adattivo. Default 50.
 
-
         """
         for i in range(len(self.layers)):
 
