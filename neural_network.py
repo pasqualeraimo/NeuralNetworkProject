@@ -155,8 +155,8 @@ class NeuralNetwork:
                                 prev_bias_gradients: list[np.ndarray],
                                 weight_delta: list[np.ndarray],
                                 bias_delta: list[np.ndarray],
-                                eta_plus: float = 1.1,
                                 eta_minus: float = 0.5,
+                                eta_plus: float = 1.1,
                                 delta_min: float = 1e-06,
                                 delta_max: float = 50):
         """
@@ -189,3 +189,105 @@ class NeuralNetwork:
             self.weights[i] -= np.sign(weight_gradients[i]) * weight_delta[i]
             self.biases[i] -= np.sign(bias_gradients[i]) * bias_delta[i]
 
+    def train(self,
+              x_train: np.ndarray,
+              y_train: np.ndarray,
+              x_validation: np.ndarray,
+              y_validation: np.ndarray,
+              max_epochs: int,
+              error_function: ErrorFunction,
+              updating_rule: Literal["sgd", "rprop"] = "sgd",
+              sgd_learning_rate: float = 0.001,
+              rprop_eta_minus: float = 0.5,
+              rprop_eta_plus: float = 1.1,
+              rprop_delta_min: float = 1e-06,
+              rprop_delta_max: float = 50,
+              log_progress: bool = True) -> tuple[list[float], list[float]]:
+        """
+        Allena la rete neurale utilizzando il training set e valuta il modello sul validation set.
+
+        Parametri:
+        x_train (np.ndarray): Input del training set, dimensione (nodi_input, numero_campioni_train).
+        y_train (np.ndarray): Target del training set, dimensione (nodi_output, numero_campioni_train).
+        x_validation (np.ndarray): Input del validation set, dimensione (nodi_input, numero_campioni_validation).
+        y_validation (np.ndarray): Target del validation set, dimensione (nodi_output, numero_campioni_validation).
+        max_epochs (int): Numero massimo di epoche di allenamento.
+        error_function (ErrorFunction): Funzione di errore per calcolare la perdita.
+        updating_rule (Literal["sgd", "rprop"]): Regola di aggiornamento dei pesi. Default "sgd".
+        sgd_learning_rate (float): Tasso di apprendimento per SGD. Default 0.001.
+        rprop_eta_minus (float): Fattore di decremento per RProp. Default 0.5.
+        rprop_eta_plus (float): Fattore di incremento per RProp. Default 1.1.
+        rprop_delta_min (float): Valore minimo del delta per RProp. Default 1e-06.
+        rprop_delta_max (float): Valore massimo del delta per RProp. Default 50.
+        log_progress (bool): Se True, stampa a video il progresso del training. Default True.
+
+        Restituisce:
+        tuple[list[float], list[float]]:
+            - error_training_history: Cronologia degli errori sul training set dopo ogni aggiornamento.
+            - error_validation_history: Cronologia degli errori sul validation set dopo ogni aggiornamento.
+        """
+        best_weights = [w.copy() for w in self.weights]
+        best_biases = [b.copy() for b in self.biases]
+
+        error_training_history = []
+        error_validation_history = []
+
+        prev_weight_gradients = [np.zeros_like(w) for w in self.weights]
+        prev_bias_gradients = [np.zeros_like(b) for b in self.biases]
+        weight_delta = [np.full_like(w, 0.1) for w in self.weights]
+        bias_delta = [np.full_like(b, 0.1) for b in self.biases]
+
+        min_error_validation = float('inf')
+
+        for epoch in range(max_epochs):
+            activations_train, pre_activations_train = self.forward_propagation(x_train)
+
+            weight_gradients, bias_gradients = self.backward_propagation(
+                targets=y_train,
+                error_function=error_function,
+                activations=activations_train,
+                pre_activations=pre_activations_train
+            )
+
+            if updating_rule == "sgd":
+                self.update_parameters_stochastic_gradient_descent(weight_gradients, bias_gradients, sgd_learning_rate)
+            elif updating_rule == "rprop":
+                self.update_parameters_rprop(weight_gradients,
+                                             bias_gradients,
+                                             prev_weight_gradients,
+                                             prev_bias_gradients,
+                                             weight_delta,
+                                             bias_delta,
+                                             rprop_eta_minus,
+                                             rprop_eta_plus,
+                                             rprop_delta_min,
+                                             rprop_delta_max)
+
+            # Calcolo errore su training e validation, dopo l'aggiornamento
+
+            # Training
+            activations_train, _ = self.forward_propagation(x_train)
+            error_training = error_function(activations_train[-1], y_train, False)
+            error_training_history.append(error_training)
+
+            # Validation
+            activations_validation, _ = self.forward_propagation(x_validation)
+            error_validation = error_function(activations_validation[-1], y_validation, False)
+            error_validation_history.append(error_validation)
+
+            # Stampa a video (opzionale)
+            if log_progress:
+                print(
+                    f"Epoch {epoch + 1}/{max_epochs}: Training error = {error_training:.6f}, Validation error = {error_validation:.6f}")
+
+            # Salvataggio dei pesi e bias se migliora il validation error
+            if error_validation < min_error_validation:
+                min_error_validation = error_validation
+                best_weights = [w.copy() for w in self.weights]
+                best_biases = [b.copy() for b in self.biases]
+
+        # Ripristino dei migliori pesi e bias (early stopping)
+        self.weights = best_weights
+        self.biases = best_biases
+
+        return error_training_history, error_validation_history
