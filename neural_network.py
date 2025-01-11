@@ -224,6 +224,9 @@ class NeuralNetwork:
               rprop_eta_plus: float = 1.1,
               rprop_delta_min: float = 1e-06,
               rprop_delta_max: float = 50,
+              early_stopping_criteria: Literal["generalization_loss", "prediction_quality"] | None = None,
+              early_stopping_criteria_gl_alpha: float = 0.01,
+              early_stopping_criteria_pq_k: int = 5,
               log_progress: bool = True) -> tuple[list[float], list[float]]:
         """
         Allena la rete neurale utilizzando il training set e valuta il modello sul validation set.
@@ -235,18 +238,25 @@ class NeuralNetwork:
         y_validation (np.ndarray): Target del validation set, dimensione (nodi_output, numero_campioni_validation).
         max_epochs (int): Numero massimo di epoche di allenamento.
         error_function (ErrorFunction): Funzione di errore per calcolare la perdita.
-        updating_rule (Literal["sgd", "rprop"]): Regola di aggiornamento dei pesi. Default "sgd".
-        sgd_learning_rate (float): Tasso di apprendimento per SGD. Default 0.001.
+        updating_rule (Literal["sgd", "rprop"]): Regola di aggiornamento dei pesi ("sgd" o "rprop"). Default "sgd".
+        sgd_learning_rate (float): Tasso di apprendimento per SGD. Ignorato se si utilizza RProp. Default 0.001.
         rprop_eta_minus (float): Fattore di decremento per RProp. Default 0.5.
         rprop_eta_plus (float): Fattore di incremento per RProp. Default 1.1.
         rprop_delta_min (float): Valore minimo del delta per RProp. Default 1e-06.
         rprop_delta_max (float): Valore massimo del delta per RProp. Default 50.
+        early_stopping_criteria (Literal["generalization_loss", "prediction_quality"] | None): Criterio per l'early stopping.
+        early_stopping_criteria_gl_alpha (float): Soglia per la perdita di generalizzazione (alpha) nel criterio "generalization_loss". Default 0.01.
+        early_stopping_criteria_pq_k (int): Numero di epoche da considerare per il criterio "prediction_quality". Default 5.
         log_progress (bool): Se True, stampa a video il progresso del training. Default True.
 
         Restituisce:
         tuple[list[float], list[float]]:
-            - error_training_history: Cronologia degli errori sul training set dopo ogni aggiornamento.
-            - error_validation_history: Cronologia degli errori sul validation set dopo ogni aggiornamento.
+            - error_training_history: Cronologia degli errori sul training set dopo ogni epoca.
+            - error_validation_history: Cronologia degli errori sul validation set dopo ogni epoca.
+
+        Note:
+        - Se si utilizza RProp, i parametri relativi a SGD (come il learning rate) vengono ignorati.
+        - L'early stopping interrompe l'allenamento anticipatamente se viene soddisfatto il criterio specificato.
         """
         best_weights = [w.copy() for w in self.weights]
         best_biases = [b.copy() for b in self.biases]
@@ -272,7 +282,8 @@ class NeuralNetwork:
             )
 
             if updating_rule == "sgd":
-                self.update_parameters_stochastic_gradient_descent(weight_gradients, bias_gradients, sgd_learning_rate)
+                self.update_parameters_stochastic_gradient_descent(weight_gradients, bias_gradients,
+                                                                   sgd_learning_rate)
             elif updating_rule == "rprop":
                 self.update_parameters_rprop(weight_gradients,
                                              bias_gradients,
@@ -309,6 +320,24 @@ class NeuralNetwork:
                 min_error_validation = error_validation
                 best_weights = [w.copy() for w in self.weights]
                 best_biases = [b.copy() for b in self.biases]
+
+            generalization_loss = 100 * ((error_validation / min_error_validation) - 1)
+            if early_stopping_criteria == "generalization_loss":
+                if generalization_loss > early_stopping_criteria_gl_alpha:
+                    print("Early stopping criteria reached")
+                    break
+            elif early_stopping_criteria == "prediction_quality":
+                if len(error_training_history) >= early_stopping_criteria_pq_k:
+                    pq_min_error_training = error_training_history[-1]
+                    sum = 0
+                    for i in range(early_stopping_criteria_pq_k):
+                        if error_training_history[-i + 1] < pq_min_error_training:
+                            pq_min_error_training = error_training_history[-i + 1]
+                        sum += error_training_history[-i + 1]
+                    pq_progress = 1000 * ((sum / (early_stopping_criteria_pq_k * pq_min_error_training)) - 1)
+                    if (generalization_loss / pq_progress) > early_stopping_criteria_gl_alpha:
+                        print("Early stopping criteria reached")
+                        break
 
         # Ripristino dei migliori pesi e bias (early stopping)
         self.weights = best_weights
