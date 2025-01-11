@@ -27,12 +27,12 @@ class NeuralNetwork:
         """
         self.layers = layers
         self.activation_functions = activation_functions
-        self.weights, self.biases = self._init_parameters_normal_distribution(mean, standard_deviation, init_parameters_seed)
+        self.weights, self.biases = self._init_parameters_normal_distribution( init_parameters_seed, mean, standard_deviation)
 
     def _init_parameters_normal_distribution(self,
+                                             seed: int,
                                              mean: float = 0.0,
-                                             standard_deviation: float = 0.1,
-                                             seed: int = 42) -> tuple[list[np.ndarray], list[np.ndarray]]:
+                                             standard_deviation: float = 0.1) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """
         Inizializza i pesi e i bias con una distribuzione normale.
 
@@ -199,8 +199,6 @@ class NeuralNetwork:
                     )
                 )
 
-                weight_gradients[i] = np.where(sign_change_weights < 0, 0, weight_gradients[i])
-
                 sign_change_bias = bias_gradients[i] * prev_bias_gradients[i]
                 bias_delta[i] = np.where(
                     sign_change_bias > 0,
@@ -209,8 +207,6 @@ class NeuralNetwork:
                         sign_change_bias < 0,
                         np.maximum(bias_delta[i] * eta_minus, delta_min),
                         bias_delta[i]))
-
-                bias_gradients[i] = np.where(sign_change_bias < 0, 0, bias_gradients[i])
 
             self.weights[i] -= np.sign(weight_gradients[i]) * weight_delta[i]
             self.biases[i] -= np.sign(bias_gradients[i]) * bias_delta[i]
@@ -258,10 +254,10 @@ class NeuralNetwork:
         error_training_history = []
         error_validation_history = []
 
-        prev_weight_gradients = [np.zeros_like(w) for w in self.weights]
-        prev_bias_gradients = [np.zeros_like(b) for b in self.biases]
-        weight_delta = [np.full_like(w, 0.1) for w in self.weights]
-        bias_delta = [np.full_like(b, 0.1) for b in self.biases]
+        prev_weight_gradients = []
+        prev_bias_gradients = []
+        weight_delta = [np.full_like(w, 0.01) for w in self.weights]
+        bias_delta = [np.full_like(b, 0.01) for b in self.biases]
 
         min_error_validation = float('inf')
 
@@ -288,6 +284,8 @@ class NeuralNetwork:
                                              rprop_eta_plus,
                                              rprop_delta_min,
                                              rprop_delta_max)
+                prev_weight_gradients = weight_gradients
+                prev_bias_gradients = bias_gradients
 
             # Calcolo errore su training e validation, dopo l'aggiornamento
 
