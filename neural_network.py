@@ -226,6 +226,7 @@ class NeuralNetwork:
               rprop_delta_max: float = 50,
               early_stopping_criteria: Literal["generalization_loss", "prediction_quality"] | None = None,
               early_stopping_criteria_gl_alpha: float = 0.01,
+              early_stopping_criteria_pq_alpha: float = 0.5,
               early_stopping_criteria_pq_k: int = 5,
               log_progress: bool = True) -> tuple[list[float], list[float]]:
         """
@@ -246,6 +247,7 @@ class NeuralNetwork:
         rprop_delta_max (float): Valore massimo del delta per RProp. Default 50.
         early_stopping_criteria (Literal["generalization_loss", "prediction_quality"] | None): Criterio per l'early stopping.
         early_stopping_criteria_gl_alpha (float): Soglia per la perdita di generalizzazione (alpha) nel criterio "generalization_loss". Default 0.01.
+        early_stopping_criteria_pq_alpha (float): Valore massimo accettabile per il rapporto (alpha) nel criterio "prediction quality". Default 0.5.
         early_stopping_criteria_pq_k (int): Numero di epoche da considerare per il criterio "prediction_quality". Default 5.
         log_progress (bool): Se True, stampa a video il progresso del training. Default True.
 
@@ -335,7 +337,7 @@ class NeuralNetwork:
                             pq_min_error_training = error_training_history[-i - 1]
                         sum += error_training_history[-i - 1]
                     pq_progress = 1000 * ((sum / (early_stopping_criteria_pq_k * pq_min_error_training)) - 1)
-                    if (generalization_loss / pq_progress) > early_stopping_criteria_gl_alpha:
+                    if (generalization_loss / pq_progress) > early_stopping_criteria_pq_alpha:
                         print("Early stopping criteria reached")
                         break
 
