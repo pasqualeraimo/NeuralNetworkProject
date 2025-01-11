@@ -30,7 +30,7 @@ class NeuralNetwork:
         self.weights, self.biases = self._init_parameters_normal_distribution( init_parameters_seed, mean, standard_deviation)
 
     def _init_parameters_normal_distribution(self,
-                                             seed: int,
+                                             seed: int = None,
                                              mean: float = 0.0,
                                              standard_deviation: float = 0.1) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """
