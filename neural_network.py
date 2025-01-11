@@ -331,9 +331,9 @@ class NeuralNetwork:
                     pq_min_error_training = error_training_history[-1]
                     sum = 0
                     for i in range(early_stopping_criteria_pq_k):
-                        if error_training_history[-i + 1] < pq_min_error_training:
-                            pq_min_error_training = error_training_history[-i + 1]
-                        sum += error_training_history[-i + 1]
+                        if error_training_history[-i - 1] < pq_min_error_training:
+                            pq_min_error_training = error_training_history[-i - 1]
+                        sum += error_training_history[-i - 1]
                     pq_progress = 1000 * ((sum / (early_stopping_criteria_pq_k * pq_min_error_training)) - 1)
                     if (generalization_loss / pq_progress) > early_stopping_criteria_gl_alpha:
                         print("Early stopping criteria reached")
