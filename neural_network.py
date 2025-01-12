@@ -228,7 +228,7 @@ class NeuralNetwork:
               early_stopping_criteria_gl_alpha: float = 0.01,
               early_stopping_criteria_pq_alpha: float = 0.5,
               early_stopping_criteria_pq_k: int = 5,
-              log_progress: bool = True) -> tuple[list[float], list[float]]:
+              log_progress: bool = True) -> tuple[list[float], list[float], int]:
         """
         Allena la rete neurale utilizzando il training set e valuta il modello sul validation set.
 
@@ -252,9 +252,10 @@ class NeuralNetwork:
         log_progress (bool): Se True, stampa a video il progresso del training. Default True.
 
         Restituisce:
-        tuple[list[float], list[float]]:
+        tuple[list[float], list[float], int]:
             - error_training_history: Cronologia degli errori sul training set dopo ogni epoca.
             - error_validation_history: Cronologia degli errori sul validation set dopo ogni epoca.
+            - epoch_reached: Numero di epoche svolte
 
         Note:
         - Se si utilizza RProp, i parametri relativi a SGD (come il learning rate) vengono ignorati.
@@ -274,6 +275,7 @@ class NeuralNetwork:
         min_error_validation = float('inf')
 
         for epoch in range(max_epochs):
+            epoch_reached = epoch + 1
             activations_train, pre_activations_train = self.forward_propagation(x_train)
 
             weight_gradients, bias_gradients = self.backward_propagation(
@@ -345,7 +347,7 @@ class NeuralNetwork:
         self.weights = best_weights
         self.biases = best_biases
 
-        return error_training_history, error_validation_history
+        return error_training_history, error_validation_history, epoch_reached
 
     def compute_accuracy(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
         """
