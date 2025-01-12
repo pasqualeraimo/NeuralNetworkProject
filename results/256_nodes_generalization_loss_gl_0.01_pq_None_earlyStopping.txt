@@ -1,0 +1,4 @@
+Best Accuracy: 0.9055
+Best Validation Error: 1777.4919
+Best Training Error: 1490.8441
+Epoch Reached: 29
