@@ -17,7 +17,7 @@ TEST_SIZE = 10000
 MAX_EPOCHS = 100
 HIDDEN_NODES = [16, 32, 64, 128, 256]
 
-GL_ALPHA_VALUES = [0.01, 0.03, 0.05, 0.08]
+GL_ALPHA_VALUES = [0.1, 0.3, 0.5, 0.8]
 
 PQ_ALPHA_VALUES = [0.1, 0.5, 1, 1.5]
 
@@ -27,7 +27,7 @@ RPROP_ETA_MINUS = 0.5
 DELTA_MIN = 1e-16
 DELTA_MAX = 50
 ACTIVATIONS = [sigmoid, identity]
-NUM_REPEATS = 10
+NUM_REPEATS = 3
 
 (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_mnist(TRAIN_SIZE, VAL_SIZE, TEST_SIZE)
 
@@ -201,12 +201,12 @@ def save_plot_error_history(
 def run():
     for nodes in HIDDEN_NODES:
         print("Numero nodi: ", nodes, "Early stopping: None")
-        run_experiment(nodes, None, num_repeats=NUM_REPEATS)
+        #run_experiment(nodes, None, num_repeats=NUM_REPEATS)
         for alpha_gl in GL_ALPHA_VALUES:
             print("Numero nodi: ", nodes, "Early stopping: generalization_loss Alpha: ", alpha_gl)
             run_experiment(nodes, "generalization_loss", alpha_gl=alpha_gl, num_repeats=NUM_REPEATS)
         for alpha_pq in PQ_ALPHA_VALUES:
             print("Numero nodi: ", nodes, "Early stopping: progress_quotient Alpha: ", alpha_pq)
-            run_experiment(nodes, "progress_quotient", alpha_pq=alpha_pq, num_repeats=NUM_REPEATS)
+            #run_experiment(nodes, "progress_quotient", alpha_pq=alpha_pq, num_repeats=NUM_REPEATS)
 
 run()

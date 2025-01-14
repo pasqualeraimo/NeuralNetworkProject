@@ -1,7 +1,0 @@
-Mean Accuracy: 0.9021 ±0.00
-Best Validation Error: 1880.7509
-Best Training Error: 420.7151
-Epoch Reached: 76 ±10.07
-Best Epoch Validation: 28
-Best Epoch Training: 75
-Difference: 48
