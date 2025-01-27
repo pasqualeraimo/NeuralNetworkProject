@@ -10,7 +10,7 @@ def sum_of_squares(predictions: np.ndarray, targets: np.ndarray, derivative: boo
     derivative (bool): Se True, calcola la derivata dell'errore rispetto alle predizioni.
 
     Restituisce:
-    np.ndarray:
+    np.ndarray:<
         - Se `derivative` è True, restituisce un array di dimensione (output_dim, batch_size) contenente la derivata dell'errore.
         - Altrimenti, restituisce un array scalare contenente l'errore complessivo (somma dei quadrati).
     """
@@ -35,8 +35,8 @@ def cross_entropy(predictions: np.ndarray, targets: np.ndarray, derivative: bool
     epsilon = 1e-12
     predictions = np.clip(predictions, epsilon, 1 - epsilon)
     if derivative:
-        return -(targets / predictions) + ((1 - targets) / (1 - predictions))
-    return -np.sum(targets * np.log(predictions) + (1 - targets) * np.log(1 - predictions))
+        return - targets / predictions
+    return -np.sum(targets * np.log(predictions))
 
 def cross_entropy_softmax(predictions: np.ndarray, targets: np.ndarray, derivative: bool = False) -> np.ndarray:
     """
